@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { log } from '../util/logging';
+import { error, log } from '../util/logging';
 
 const ticketsRouter = Router();
 
@@ -23,19 +23,32 @@ ticketsRouter.get('/', (req, res, next) => {
 		});
 	}
 
-	let client = req.zdClient;
+	const client = req.zdClient;
 
+	// Validate client object
 	if (!client) {
+		error(
+			'Requesting tickets, but could not initialize Zendesk API Client'
+		);
 		return res
 			.status(500)
 			.json({ error: 'Could not initialize Zendesk API Client' });
 	}
 
-	log(`Requesting ${limit} tickets on page ${page}`);
+	log(`Requesting ${limit === -1 ? 'all' : limit} tickets on page ${page}`);
 
-	client.tickets.list((error, clientRes, tickets) => {
-		if (error) return res.status(500).json({ error });
+	client.tickets.list((err, clientRes, tickets) => {
+		// Handle error coming from the Zendesk API
+		if (err) {
+			error('Requesting tickets but could not reach the Zendesk API');
+			err.message = 'Could not reach the Zendesk API';
+			return res.status(503).json({ error: err });
+		}
+		// Handle unexpected response type
 		if (!Array.isArray(tickets)) {
+			error(
+				'Requesting tickets, but received unexpected response format from Zendesk API'
+			);
 			return res
 				.status(500)
 				.json({ error: 'Unexpected response format from Zendesk API' });
@@ -54,9 +67,10 @@ ticketsRouter.get('/', (req, res, next) => {
 });
 
 ticketsRouter.get('/count', (req, res, next) => {
-	let client = req.zdClient;
+	const client = req.zdClient;
 
 	if (!client) {
+		error('Requesting count, but could not initialize Zendesk API Client');
 		return res
 			.status(500)
 			.json({ error: 'Could not initialize Zendesk API Client' });
@@ -64,9 +78,12 @@ ticketsRouter.get('/count', (req, res, next) => {
 
 	log(`Requesting ticket count`);
 
-	client.tickets.list((error, clientRes, tickets) => {
-		if (error) return res.status(500).json({ error });
+	client.tickets.list((err, clientRes, tickets) => {
+		if (err) return res.status(500).json({ err });
 		if (!Array.isArray(tickets)) {
+			error(
+				'Requesting ticket count, but received unexpected response format from Zendesk API'
+			);
 			return res
 				.status(500)
 				.json({ error: 'Unexpected response format from Zendesk API' });
