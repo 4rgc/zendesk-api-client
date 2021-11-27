@@ -7,11 +7,20 @@ ticketsRouter.get('/', (req, res, next) => {
 	let limit = req.query.limit ?? -1;
 	let page = req.query.page ?? 0;
 
-	if (typeof limit === 'string') {
-		limit = Number.parseInt(limit);
-	}
-	if (typeof page === 'string') {
-		page = Number.parseInt(page);
+	limit = Number.parseInt(limit as string);
+	page = Number.parseInt(page as string);
+
+	// Validate query params
+	if (isNaN(limit)) {
+		log("Requesting tickets but couldn't parse the 'limit' param");
+		return res.status(400).json({
+			error: "Couldn't parse the 'limit' param",
+		});
+	} else if (isNaN(page)) {
+		log("Requesting tickets but couldn't parse the 'page' param");
+		return res.status(400).json({
+			error: "Couldn't parse the 'page' param",
+		});
 	}
 
 	let client = req.zdClient;
