@@ -57,40 +57,15 @@ ticketsRouter.get('/', (req, res, next) => {
 		}
 
 		if (limit === -1) {
-			return res.json({ tickets });
+			return res.json({ tickets, totalCount: tickets.length });
 		}
 
 		const lowerBound = (limit as number) * (page as number);
 		const upperBound = (limit as number) * ((page as number) + 1);
 		return res.json({
 			tickets: tickets.slice(lowerBound, upperBound),
+			totalCount: tickets.length,
 		});
-	});
-});
-
-ticketsRouter.get('/count', (req, res, next) => {
-	const client = req.zdClient;
-
-	if (!client) {
-		error('Requesting count, but could not initialize Zendesk API Client');
-		return res
-			.status(500)
-			.json({ error: 'Could not initialize Zendesk API Client' });
-	}
-
-	log(`Requesting ticket count`);
-
-	client.tickets.list((err, clientRes, tickets) => {
-		if (err) return res.status(500).json({ err });
-		if (!Array.isArray(tickets)) {
-			error(
-				'Requesting ticket count, but received unexpected response format from Zendesk API'
-			);
-			return res
-				.status(500)
-				.json({ error: 'Unexpected response format from Zendesk API' });
-		}
-		return res.json({ count: tickets.length });
 	});
 });
 
