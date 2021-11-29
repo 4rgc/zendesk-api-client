@@ -40,9 +40,11 @@ ticketsRouter.get('/', (req, res, next) => {
 	client.tickets.list((err, clientRes, tickets) => {
 		// Handle error coming from the Zendesk API
 		if (err) {
-			error('Requesting tickets but could not reach the Zendesk API');
-			err.message = 'Could not reach the Zendesk API';
-			return res.status(503).json({ error: err });
+			error(
+				`Requesting tickets but could not reach the Zendesk API. ${err}`
+			);
+			const message = 'Could not reach the Zendesk API';
+			return res.status(503).json({ error: message });
 		}
 		// Handle unexpected response type
 		if (!Array.isArray(tickets)) {
