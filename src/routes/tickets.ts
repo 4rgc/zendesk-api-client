@@ -1,11 +1,35 @@
 import { Router } from 'express';
 import { error, log } from '../util/logging';
+import zendesk from 'node-zendesk';
 
 const ticketsRouter = Router();
 
 ticketsRouter.get('/', (req, res, next) => {
 	let limit = req.query.limit ?? -1;
 	let page = req.query.page ?? 0;
+	const site = req.query.site || '';
+
+	// check for basic auth header
+	if (
+		!req.headers.authorization ||
+		req.headers.authorization.indexOf('Basic ') === -1
+	) {
+		return res
+			.status(401)
+			.json({ message: 'Missing Authorization Header' });
+	}
+
+	const base64Credentials = req.headers.authorization.split(' ')[1];
+	const credentials = Buffer.from(base64Credentials, 'base64').toString(
+		'ascii'
+	);
+	const [username, password] = credentials.split(':');
+
+	const client = zendesk.createClient({
+		remoteUri: `https://${site}.zendesk.com/api/v2`,
+		username,
+		token: password,
+	});
 
 	limit = Number.parseInt(limit as string);
 	page = Number.parseInt(page as string);
@@ -22,8 +46,6 @@ ticketsRouter.get('/', (req, res, next) => {
 			error: "Couldn't parse the 'page' param",
 		});
 	}
-
-	const client = req.zdClient;
 
 	// Validate client object
 	if (!client) {
