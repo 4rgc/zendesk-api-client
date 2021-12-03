@@ -5,8 +5,8 @@ import zendesk from 'node-zendesk';
 const ticketsRouter = Router();
 
 ticketsRouter.get('/', (req, res, next) => {
-	let limit = req.query.limit ?? -1;
-	let page = req.query.page ?? 0;
+	const limit = req.query.limit ?? '-1';
+	const page = req.query.page ?? '0';
 	const site = req.query.site || '';
 
 	// check for basic auth header
@@ -31,16 +31,16 @@ ticketsRouter.get('/', (req, res, next) => {
 		token: password,
 	});
 
-	limit = Number.parseInt(limit as string);
-	page = Number.parseInt(page as string);
+	const limitNumber = Number.parseInt(limit as string);
+	const pageNumber = Number.parseInt(page as string);
 
 	// Validate query params
-	if (isNaN(limit)) {
+	if (isNaN(limitNumber)) {
 		log("Requesting tickets but couldn't parse the 'limit' param");
 		return res.status(400).json({
 			error: "Couldn't parse the 'limit' param",
 		});
-	} else if (isNaN(page)) {
+	} else if (isNaN(pageNumber)) {
 		log("Requesting tickets but couldn't parse the 'page' param");
 		return res.status(400).json({
 			error: "Couldn't parse the 'page' param",
@@ -57,7 +57,11 @@ ticketsRouter.get('/', (req, res, next) => {
 			.json({ error: 'Could not initialize Zendesk API Client' });
 	}
 
-	log(`Requesting ${limit === -1 ? 'all' : limit} tickets on page ${page}`);
+	log(
+		`Requesting ${
+			limitNumber === -1 ? 'all' : limitNumber
+		} tickets on page ${pageNumber}`
+	);
 
 	client.tickets.list((err, clientRes, tickets) => {
 		// Handle error coming from the Zendesk API
@@ -78,12 +82,13 @@ ticketsRouter.get('/', (req, res, next) => {
 				.json({ error: 'Unexpected response format from Zendesk API' });
 		}
 
-		if (limit === -1) {
+		if (limitNumber === -1) {
 			return res.json({ tickets, totalCount: tickets.length });
 		}
 
-		const lowerBound = (limit as number) * (page as number);
-		const upperBound = (limit as number) * ((page as number) + 1);
+		const lowerBound = (limitNumber as number) * (pageNumber as number);
+		const upperBound =
+			(limitNumber as number) * ((pageNumber as number) + 1);
 		return res.json({
 			tickets: tickets.slice(lowerBound, upperBound),
 			totalCount: tickets.length,
