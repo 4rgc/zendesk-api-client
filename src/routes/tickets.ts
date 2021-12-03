@@ -2,6 +2,10 @@ import { Router } from 'express';
 import { error, log } from '../util/logging';
 import zendesk from 'node-zendesk';
 import hash from 'object-hash';
+import {
+	getCredsFromBasicAuth,
+	requestHasBasicAuth,
+} from '../util/authorization';
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const clients = require('../util/clientStore');
 
@@ -13,20 +17,13 @@ ticketsRouter.get('/', (req, res, next) => {
 	const site = req.query.site || '';
 
 	// check for basic auth header
-	if (
-		!req.headers.authorization ||
-		req.headers.authorization.indexOf('Basic ') === -1
-	) {
+	if (!requestHasBasicAuth(req)) {
 		return res
 			.status(401)
 			.json({ message: 'Missing Authorization Header' });
 	}
 
-	const base64Credentials = req.headers.authorization.split(' ')[1];
-	const credentials = Buffer.from(base64Credentials, 'base64').toString(
-		'ascii'
-	);
-	const [username, password] = credentials.split(':');
+	const [username, password] = getCredsFromBasicAuth(req);
 
 	const clientHash = hash(JSON.stringify({ username, password, site }));
 
