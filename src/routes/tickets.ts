@@ -1,6 +1,9 @@
 import { Router } from 'express';
 import { error, log } from '../util/logging';
 import zendesk from 'node-zendesk';
+import hash from 'object-hash';
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const clients = require('../util/clientStore');
 
 const ticketsRouter = Router();
 
@@ -25,11 +28,18 @@ ticketsRouter.get('/', (req, res, next) => {
 	);
 	const [username, password] = credentials.split(':');
 
-	const client = zendesk.createClient({
-		remoteUri: `https://${site}.zendesk.com/api/v2`,
-		username,
-		token: password,
-	});
+	const clientHash = hash(JSON.stringify({ username, password, site }));
+
+	if (!clients[clientHash]) {
+		log('Creating a new client object');
+		clients[clientHash] = zendesk.createClient({
+			remoteUri: `https://${site}.zendesk.com/api/v2`,
+			username,
+			token: password,
+		});
+	}
+
+	const client = clients[clientHash] as zendesk.Client;
 
 	const limitNumber = Number.parseInt(limit as string);
 	const pageNumber = Number.parseInt(page as string);
