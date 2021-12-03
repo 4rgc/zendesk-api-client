@@ -28,6 +28,8 @@ Here are the steps if you want to run this app on your local machine. You should
 
 1. Clone the repository
 2. From the repository folder, run `npm install`.
-3. Done! To run the development version, run `npm run dev`. This does not have hot restart, so you'll have to rerun the app on any changes to the code.
+3. Create a file named `.env` in the project folder
+4. Add the following line: `PORT=number`, replacing `number` with the port of your choice. Default value is `3005`
+5. Done! To run the development version, run `npm run dev`. This does not have hot restart, so you'll have to rerun the app on any changes to the code.
 
    For the production version, you need to first compile the app (`npm run compile`), and then run the built code (`npm start`).
