@@ -6,6 +6,7 @@ dotenv.config();
 import ticketsRouter from './routes/tickets';
 
 const app = express();
+const port = process.env.PORT || 3005;
 
 app.use(cors());
 
@@ -15,6 +16,6 @@ app.get('/', (req, res) => {
 
 app.use('/tickets', ticketsRouter);
 
-app.listen(process.env.PORT, () => {
-	console.log(`Listeting on port ${process.env.PORT}`);
+app.listen(port, () => {
+	console.log(`Listeting on port ${port}`);
 });
