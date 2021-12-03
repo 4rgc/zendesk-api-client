@@ -6,8 +6,9 @@ import {
 	getCredsFromBasicAuth,
 	requestHasBasicAuth,
 } from '../util/authorization';
+import { ClientStore } from '../util/clientStore';
 // eslint-disable-next-line @typescript-eslint/no-var-requires
-const clients = require('../util/clientStore');
+const clients = require('../util/clientStore') as ClientStore;
 
 const ticketsRouter = Router();
 
@@ -36,7 +37,7 @@ ticketsRouter.get('/', (req, res, next) => {
 		});
 	}
 
-	const client = clients[clientHash] as zendesk.Client;
+	const client = clients[clientHash];
 
 	const limitNumber = Number.parseInt(limit as string);
 	const pageNumber = Number.parseInt(page as string);
